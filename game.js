@@ -1,17 +1,19 @@
 let game = {
   ctx: null,
+  platform: null,
+  ball: null,
   sprites: {
     background: null,
     ball: null,
     platform: null
   },
 
-  // Initialize canvas context
+  // Initialize the canvas context
   init: function() {
     this.ctx = document.getElementById("mycanvas").getContext("2d");
   },
 
-  // Preload images and invoke the callback when all are loaded
+  // Preload images and invoke callback when all are loaded
   preload: function(callback) {
     let loaded = 0;
     let required = Object.keys(this.sprites).length;
@@ -35,12 +37,23 @@ let game = {
     });
   },
 
-  // Render the game by drawing all the sprites
+  // Render all the sprites
   render: function() {
-    this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height); // Clear the canvas first
-    this.ctx.drawImage(this.sprites.background, 0, 0);  // Draw the background at (0, 0)
-    this.ctx.drawImage(this.sprites.ball, 50, 50);      // Draw the ball at a specific position (50, 50)
-    this.ctx.drawImage(this.sprites.platform, 100, 400); // Draw the platform at a specific position (100, 400)
+    this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height); // Clear canvas
+    this.ctx.drawImage(this.sprites.background, 0, 0); // Draw background
+
+    // Draw the ball
+    this.ctx.drawImage(
+      this.sprites.ball,
+      this.ball.x, this.ball.y, // Ball position
+      this.ball.width, this.ball.height // Ball size
+    );
+
+    // Draw the platform
+    this.ctx.drawImage(
+      this.sprites.platform,
+      this.platform.x, this.platform.y // Platform position
+    );
   },
 
   // Start the game
@@ -50,6 +63,20 @@ let game = {
       this.run();
     });
   }
+};
+
+// Define the ball properties
+game.ball = {
+  x: 320,
+  y: 280,
+  width: 20,
+  height: 20
+};
+
+// Define the platform properties
+game.platform = {
+  x: 280,
+  y: 300
 };
 
 // Start the game when the window loads
