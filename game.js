@@ -13,12 +13,28 @@ let game = {
     block: null
   },
 
-  // Initialize canvas context
+  // Initialize the game and set up events
   init: function() {
     this.ctx = document.getElementById("mycanvas").getContext("2d");
+    this.setEvents();
   },
 
-  // Preload all sprites and invoke callback when all are loaded
+  // Set event listeners for platform movement
+  setEvents: function() {
+    window.addEventListener("keydown", e => {
+      if (e.keyCode === 37) {
+        this.platform.dx = -this.platform.velocity; // Move left
+      } else if (e.keyCode === 39) {
+        this.platform.dx = this.platform.velocity; // Move right
+      }
+    });
+
+    window.addEventListener("keyup", e => {
+      this.platform.dx = 0; // Stop movement when key is released
+    });
+  },
+
+  // Preload images
   preload: function(callback) {
     let loaded = 0;
     let required = Object.keys(this.sprites).length;
@@ -37,7 +53,7 @@ let game = {
     }
   },
 
-  // Create blocks based on the number of rows and columns
+  // Create the blocks
   create: function() {
     for (let row = 0; row < this.rows; row++) {
       for (let col = 0; col < this.cols; col++) {
@@ -49,10 +65,17 @@ let game = {
     }
   },
 
-  // Main game loop runner
+  // Update the platform's position
+  update: function() {
+    this.platform.move();
+  },
+
+  // Run the game loop
   run: function() {
     window.requestAnimationFrame(() => {
+      this.update();
       this.render();
+      this.run();
     });
   },
 
@@ -69,10 +92,7 @@ let game = {
     );
 
     // Draw the platform
-    this.ctx.drawImage(
-      this.sprites.platform,
-      this.platform.x, this.platform.y
-    );
+    this.ctx.drawImage(this.sprites.platform, this.platform.x, this.platform.y);
 
     // Render blocks
     this.renderBlocks();
@@ -95,6 +115,23 @@ let game = {
   }
 };
 
+// Platform object with movement logic
+game.platform = {
+  x: 280,
+  y: 300,
+  width: 100,
+  height: 20,
+  velocity: 6,
+  dx: 0,
+
+  // Move the platform based on dx
+  move: function() {
+    this.x += this.dx;
+    if (this.x < 0) this.x = 0; // Prevent going out of bounds (left)
+    if (this.x + this.width > game.ctx.canvas.width) this.x = game.ctx.canvas.width - this.width; // Prevent going out of bounds (right)
+  }
+};
+
 // Ball object
 game.ball = {
   x: 320,
@@ -103,13 +140,6 @@ game.ball = {
   height: 20
 };
 
-// Platform object
-game.platform = {
-  x: 280,
-  y: 300
-};
-
-// Start the game when the window loads
 window.addEventListener("load", () => {
   game.start();
 });
