@@ -6,6 +6,7 @@ const KEYS = {
 
 let game = {
   ctx: null,
+  running: true,
   platform: null,
   ball: null,
   blocks: [],
@@ -74,6 +75,7 @@ let game = {
       this.collideBlocks();
       this.collidePlatform();
       this.ball.collideWorldBounds();
+      this.platform.collideWorldBounds();
       this.platform.move();
       this.ball.move();
   },
@@ -93,11 +95,13 @@ let game = {
   },
 
   run: function() {
-      window.requestAnimationFrame(() => {
-          this.update();
-          this.render();
-          this.run();
-      });
+      if (this.running) {
+          window.requestAnimationFrame(() => {
+              this.update();
+              this.render();
+              this.run();
+          });
+      }
   },
 
   render: function() {
@@ -192,8 +196,9 @@ game.ball = {
           this.y = 0;
           this.dy = this.velocity;
       } else if (ballBottom > worldBottom) {
-          console.log('Game Over');
-          // Reset or stop the game
+          game.running = false;
+          alert("Game Over");
+          window.location.reload();
       }
   },
 
