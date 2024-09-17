@@ -103,7 +103,7 @@ let game = {
   render: function() {
       this.ctx.clearRect(0, 0, this.width, this.height);
       this.ctx.drawImage(this.sprites.background, 0, 0);
-      this.ctx.drawImage(this.sprites.ball, 0, 0, this.ball.width, this.ball.height, this.ball.x, this.ball.y, this.ball.width, this.ball.height);
+      this.ctx.drawImage(this.sprites.ball, this.ball.x, this.ball.y, this.ball.width, this.ball.height);
       this.ctx.drawImage(this.sprites.platform, this.platform.x, this.platform.y);
       this.renderBlocks();
   },
@@ -166,17 +166,6 @@ game.ball = {
       return false;
   },
 
-  bumpBlock: function(block) {
-      this.dy *= -1; // Reverse direction on collision
-      block.active = false; // Deactivate block
-  },
-
-  bumpPlatform: function(platform) {
-      this.dy *= -1;
-      let touchX = this.x + this.width / 2;
-      this.dx = this.velocity * platform.getTouchOffset(touchX);
-  },
-
   collideWorldBounds: function() {
       let x = this.x + this.dx;
       let y = this.y + this.dy;
@@ -193,19 +182,35 @@ game.ball = {
 
       if (ballLeft < worldLeft) {
           this.x = 0;
-          this.dx *= -1;
+          this.dx = this.velocity;
       } else if (ballRight > worldRight) {
           this.x = worldRight - this.width;
-          this.dx *= -1;
+          this.dx = -this.velocity;
       }
 
       if (ballTop < worldTop) {
           this.y = 0;
-          this.dy *= -1;
+          this.dy = this.velocity;
       } else if (ballBottom > worldBottom) {
-          // Ball fell below platform (game over or reset condition can be handled here)
-          this.y = worldBottom - this.height;
-          this.dy *= -1;
+          console.log('Game Over');
+          // Reset or stop the game
+      }
+  },
+
+  bumpBlock: function(block) {
+      this.dy *= -1;
+      block.active = false;
+  },
+
+  bumpPlatform: function(platform) {
+      if (platform.dx) {
+          this.x += platform.dx;
+      }
+
+      if (this.dy > 0) {
+          this.dy = -this.velocity;
+          let touchX = this.x + this.width / 2;
+          this.dx = this.velocity * platform.getTouchOffset(touchX);
       }
   }
 };
@@ -223,7 +228,7 @@ game.platform = {
   fire: function() {
       if (this.ball) {
           this.ball.start();
-          this.ball = null; // Detach ball from platform after firing
+          this.ball = null;
       }
   },
 
@@ -243,7 +248,7 @@ game.platform = {
       if (this.dx) {
           this.x += this.dx;
           if (this.ball) {
-              this.ball.x += this.dx; // Move the ball with the platform before firing
+              this.ball.x += this.dx;
           }
       }
   },
@@ -253,6 +258,19 @@ game.platform = {
       let offset = this.width - diff;
       let result = 2 * offset / this.width;
       return result - 1;
+  },
+
+  collideWorldBounds: function() {
+      let x = this.x + this.dx;
+      let platformLeft = x;
+      let platformRight = platformLeft + this.width;
+
+      let worldLeft = 0;
+      let worldRight = game.width;
+
+      if (platformLeft < worldLeft || platformRight > worldRight) {
+          this.dx = 0;
+      }
   }
 };
 
