@@ -60,6 +60,7 @@ let game = {
       for (let row = 0; row < this.rows; row++) {
           for (let col = 0; col < this.cols; col++) {
               this.blocks.push({
+                  active: true,
                   width: 60,
                   height: 20,
                   x: 64 * col + 65,
@@ -70,12 +71,23 @@ let game = {
   },
 
   update: function() {
+      this.collideBlocks();
+      this.collidePlatform();
       this.platform.move();
       this.ball.move();
+  },
+
+  collideBlocks: function() {
       for (let block of this.blocks) {
-          if (this.ball.collide(block)) {
+          if (block.active && this.ball.collide(block)) {
               this.ball.bumpBlock(block);
           }
+      }
+  },
+
+  collidePlatform: function() {
+      if (this.ball.collide(this.platform)) {
+          this.ball.bumpPlatform(this.platform);
       }
   },
 
@@ -90,14 +102,17 @@ let game = {
   render: function() {
       this.ctx.clearRect(0, 0, this.width, this.height);
       this.ctx.drawImage(this.sprites.background, 0, 0);
-      this.ctx.drawImage(this.sprites.ball, 0, 0, this.ball.width, this.ball.height, this.ball.x, this.ball.y, this.ball.width, this.ball.height);
+      this.ctx.drawImage(this.sprites.ball, 0, 0, this.ball.width, this.ball.height,
+          this.ball.x, this.ball.y, this.ball.width, this.ball.height);
       this.ctx.drawImage(this.sprites.platform, this.platform.x, this.platform.y);
       this.renderBlocks();
   },
 
   renderBlocks: function() {
       for (let block of this.blocks) {
-          this.ctx.drawImage(this.sprites.block, block.x, block.y);
+          if (block.active) {
+              this.ctx.drawImage(this.sprites.block, block.x, block.y);
+          }
       }
   },
 
@@ -152,7 +167,14 @@ game.ball = {
   },
 
   bumpBlock: function(block) {
-      this.dy *= -1; // Change ball direction when hitting a block
+      this.dy *= -1; // Reverse direction on collision
+      block.active = false; // Deactivate block
+  },
+
+  bumpPlatform: function(platform) {
+      this.dy *= -1;
+      let touchX = this.x + this.width / 2;
+      this.dx = this.velocity * platform.getTouchOffset(touchX);
   }
 };
 
@@ -162,6 +184,8 @@ game.platform = {
   dx: 0,
   x: 280,
   y: 300,
+  width: 100,
+  height: 14,
   ball: game.ball,
 
   fire: function() {
@@ -186,11 +210,17 @@ game.platform = {
   move: function() {
       if (this.dx) {
           this.x += this.dx;
-          // Move the ball along with the platform before firing
           if (this.ball) {
-              this.ball.x += this.dx;
+              this.ball.x += this.dx; // Move the ball with the platform before firing
           }
       }
+  },
+
+  getTouchOffset: function(x) {
+      let diff = (this.x + this.width) - x;
+      let offset = this.width - diff;
+      let result = 2 * offset / this.width;
+      return result - 1;
   }
 };
 
