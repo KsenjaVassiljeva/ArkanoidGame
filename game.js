@@ -1,3 +1,8 @@
+const KEYS = {
+  LEFT: 37,
+  RIGHT: 39
+};
+
 let game = {
   ctx: null,
   platform: null,
@@ -18,16 +23,14 @@ let game = {
   },
   
   setEvents: function() {
-      window.addEventListener("keydown", e => {
-          if (e.keyCode === 37) {
-              this.platform.dx = -this.platform.velocity;
-          } else if (e.keyCode === 39) {
-              this.platform.dx = this.platform.velocity;
+      window.addEventListener("keydown", (e) => {
+          if (e.keyCode === KEYS.LEFT || e.keyCode === KEYS.RIGHT) {
+              this.platform.start(e.keyCode);
           }
       });
       
-      window.addEventListener("keyup", e => {
-          this.platform.dx = 0;
+      window.addEventListener("keyup", () => {
+          this.platform.stop();
       });
   },
   
@@ -96,3 +99,41 @@ let game = {
       });
   }
 };
+
+game.ball = {
+  x: 320,
+  y: 280,
+  width: 20,
+  height: 20
+};
+
+game.platform = {
+  velocity: 6,
+  dx: 0,
+  x: 280,
+  y: 300,
+  
+  start: function(direction) {
+      if (direction === KEYS.LEFT) {
+          this.dx = -this.velocity;
+      } else if (direction === KEYS.RIGHT) {
+          this.dx = this.velocity;
+      }
+  },
+  
+  stop: function() {
+      this.dx = 0;
+  },
+  
+  move: function() {
+      if (this.dx) {
+          this.x += this.dx;
+          game.ball.x += this.dx; // Move ball with platform
+      }
+  }
+};
+
+// Start the game when the page loads
+window.addEventListener("load", () => {
+  game.start();
+});
