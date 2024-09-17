@@ -52,11 +52,15 @@ let game = {
   },
 
   setEvents() {
-    window.addEventListener("keydown", e => {
-      if (e.keyCode === KEYS.SPACE) {
-        this.platform.fire();
-      } else if (e.keyCode === KEYS.LEFT || e.keyCode === KEYS.RIGHT) {
-        this.platform.start(e.keyCode);
+    window.addEventListener("keydown", (e) => {
+      switch (e.keyCode) {
+        case KEYS.SPACE:
+          this.platform.fire();
+          break;
+        case KEYS.LEFT:
+        case KEYS.RIGHT:
+          this.platform.start(e.keyCode);
+          break;
       }
     });
 
@@ -67,7 +71,7 @@ let game = {
 
   preload(callback) {
     let loaded = 0;
-    let required = Object.keys(this.sprites).length + Object.keys(this.sounds).length;
+    const required = Object.keys(this.sprites).length + Object.keys(this.sounds).length;
 
     const onResourceLoad = () => {
       loaded++;
@@ -81,26 +85,28 @@ let game = {
   },
 
   preloadSprites(onResourceLoad) {
-    Object.keys(this.sprites).forEach(key => {
-      this.sprites[key] = new Image();
-      this.sprites[key].src = SPRITE_PATH + key + ".png";
-      this.sprites[key].addEventListener("load", () => {
-        console.log(key + " image loaded");
+    Object.keys(this.sprites).forEach((key) => {
+      const img = new Image();
+      img.src = SPRITE_PATH + key + ".png";
+      img.addEventListener("load", () => {
+        console.log(`${key} image loaded`);
         onResourceLoad();
       });
-      this.sprites[key].addEventListener("error", () => {
-        console.error("Failed to load image: " + this.sprites[key].src);
+      img.addEventListener("error", () => {
+        console.error("Failed to load image: " + img.src);
       });
+      this.sprites[key] = img;
     });
   },
 
   preloadAudio(onResourceLoad) {
-    Object.keys(this.sounds).forEach(key => {
-      this.sounds[key] = new Audio(SOUND_PATH + key + ".mp3");
-      this.sounds[key].addEventListener("canplaythrough", onResourceLoad, { once: true });
-      this.sounds[key].addEventListener("error", () => {
-        console.error("Failed to load audio: " + this.sounds[key].src);
+    Object.keys(this.sounds).forEach((key) => {
+      const audio = new Audio(SOUND_PATH + key + ".mp3");
+      audio.addEventListener("canplaythrough", onResourceLoad, { once: true });
+      audio.addEventListener("error", () => {
+        console.error("Failed to load audio: " + audio.src);
       });
+      this.sounds[key] = audio;
     });
   },
 
@@ -132,12 +138,12 @@ let game = {
   addScore() {
     this.score++;
     if (this.score >= this.blocks.length) {
-      this.end("Вы победили");
+      this.end("You won!");
     }
   },
 
   collideBlocks() {
-    this.blocks.forEach(block => {
+    this.blocks.forEach((block) => {
       if (block.active && this.ball.collide(block)) {
         this.ball.bumpBlock(block);
         this.addScore();
@@ -179,7 +185,7 @@ let game = {
   },
 
   renderBlocks() {
-    this.blocks.forEach(block => {
+    this.blocks.forEach((block) => {
       if (block.active) {
         this.ctx.drawImage(this.sprites.block, block.x, block.y);
       }
@@ -224,10 +230,7 @@ game.ball = {
 
   animate() {
     setInterval(() => {
-      this.frame++;
-      if (this.frame > 3) {
-        this.frame = 0;
-      }
+      this.frame = (this.frame + 1) % 4;
     }, 100);
   },
 
@@ -237,8 +240,8 @@ game.ball = {
   },
 
   collide(element) {
-    let x = this.x + this.dx;
-    let y = this.y + this.dy;
+    const x = this.x + this.dx;
+    const y = this.y + this.dy;
 
     return x + this.width > element.x &&
            x < element.x + element.width &&
@@ -247,27 +250,22 @@ game.ball = {
   },
 
   collideWorldBounds() {
-    let x = this.x + this.dx;
-    let y = this.y + this.dy;
+    const x = this.x + this.dx;
+    const y = this.y + this.dy;
 
-    let ballLeft = x;
-    let ballRight = ballLeft + this.width;
-    let ballTop = y;
-    let ballBottom = ballTop + this.height;
-
-    if (ballLeft < 0) {
+    if (x < 0) {
       this.x = 0;
       this.dx = this.velocity;
-    } else if (ballRight > GAME_WIDTH) {
+    } else if (x + this.width > GAME_WIDTH) {
       this.x = GAME_WIDTH - this.width;
       this.dx = -this.velocity;
     }
 
-    if (ballTop < 0) {
+    if (y < 0) {
       this.y = 0;
       this.dy = this.velocity;
-    } else if (ballBottom > GAME_HEIGHT) {
-      game.end("Вы проиграли");
+    } else if (y + this.height > GAME_HEIGHT) {
+      game.end("You lost!");
     }
   },
 
@@ -283,7 +281,7 @@ game.ball = {
 
     if (this.dy > 0) {
       this.dy = -this.velocity;
-      let touchX = this.x + this.width / 2;
+      const touchX = this.x + this.width / 2;
       this.dx = this.velocity * platform.getTouchOffset(touchX);
     }
   }
@@ -307,11 +305,7 @@ game.platform = {
   },
 
   start(direction) {
-    if (direction === KEYS.LEFT) {
-      this.dx = -this.velocity;
-    } else if (direction === KEYS.RIGHT) {
-      this.dx = this.velocity;
-    }
+    this.dx = direction === KEYS.LEFT ? -this.velocity : (direction === KEYS.RIGHT ? this.velocity : 0);
   },
 
   stop() {
@@ -328,14 +322,14 @@ game.platform = {
   },
 
   getTouchOffset(x) {
-    let diff = (this.x + this.width) - x;
-    let offset = this.width - diff;
+    const diff = (this.x + this.width) - x;
+    const offset = this.width - diff;
     return (2 * offset / this.width) - 1;
   },
 
   collideWorldBounds() {
-    let platformLeft = this.x + this.dx;
-    let platformRight = platformLeft + this.width;
+    const platformLeft = this.x + this.dx;
+    const platformRight = platformLeft + this.width;
 
     if (platformLeft < 0 || platformRight > GAME_WIDTH) {
       this.dx = 0;
