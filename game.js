@@ -60,6 +60,8 @@ let game = {
       for (let row = 0; row < this.rows; row++) {
           for (let col = 0; col < this.cols; col++) {
               this.blocks.push({
+                  width: 60,
+                  height: 20,
                   x: 64 * col + 65,
                   y: 24 * row + 35
               });
@@ -70,6 +72,11 @@ let game = {
   update: function() {
       this.platform.move();
       this.ball.move();
+      for (let block of this.blocks) {
+          if (this.ball.collide(block)) {
+              this.ball.bumpBlock(block);
+          }
+      }
   },
 
   run: function() {
@@ -119,7 +126,7 @@ game.ball = {
 
   start: function() {
       this.dy = -this.velocity;
-      this.dx = game.random(-this.velocity, this.velocity); // Random horizontal direction
+      this.dx = game.random(-this.velocity, this.velocity);
   },
 
   move: function() {
@@ -129,6 +136,23 @@ game.ball = {
       if (this.dx) {
           this.x += this.dx;
       }
+  },
+
+  collide: function(element) {
+      let x = this.x + this.dx;
+      let y = this.y + this.dy;
+
+      if (x + this.width > element.x &&
+          x < element.x + element.width &&
+          y + this.height > element.y &&
+          y < element.y + element.height) {
+          return true;
+      }
+      return false;
+  },
+
+  bumpBlock: function(block) {
+      this.dy *= -1; // Change ball direction when hitting a block
   }
 };
 
